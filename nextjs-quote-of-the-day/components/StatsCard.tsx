@@ -1,8 +1,16 @@
 'use client';
 
+import { QuoteState } from '@/types/quote';
 import { motion } from 'framer-motion';
+import React from 'react';
 
-export const StatsCard = () => {
+interface QuoteStateProps {
+  quoteState: QuoteState
+}
+
+export const StatsCard: React.FC<QuoteStateProps> = ({ quoteState }) => {
+  console.log(quoteState);
+  
   return (
     <motion.section
       initial={{ opacity: 0, y: 20 }}
@@ -15,9 +23,9 @@ export const StatsCard = () => {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { value: '1,247', label: 'Quotes Viewed Today', color: 'text-purple-400' },
-            { value: '89', label: 'Authors Featured', color: 'text-pink-400' },
-            { value: '534', label: 'Quotes Saved', color: 'text-blue-400' }
+            { value: quoteState.totalTodayViews as number, label: 'Quotes Viewed Today', color: 'text-purple-400' },
+            // { value: '89', label: 'Authors Featured', color: 'text-pink-400' },
+            { value: quoteState.totalTodaySaved as number, label: 'Quotes Saved', color: 'text-blue-400' }
           ].map((stat, index) => (
             <motion.div
               key={stat.label}

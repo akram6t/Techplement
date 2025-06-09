@@ -1,37 +1,85 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useQuotes } from '@/hooks/useQuotes';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { QuoteCard } from '@/components/QuoteCard';
-import { SearchBar } from '@/components/SearchBar';
-import { CategorySelector } from '@/components/CategorySelector';
-import { AuthorCard } from '@/components/AuthorCard';
+// import { SearchBar } from '@/components/SearchBar';
+import { QuoteTypeSelector } from '@/components/QuoteTypeSelector';
+// import { AuthorCard } from '@/components/AuthorCard';
 import { StatsCard } from '@/components/StatsCard';
+import { useAuth } from '@/context/auth-context';
+import { use, useEffect, useState } from 'react';
+import { getAllQuoteTypes, getQuoteOfToday, getQuoteState, saveQuote } from '@/lib/api';
+import { Quote, QuoteState } from '@/types/quote';
+import { Loader } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Home() {
-  const {
-    quotes,
-    currentQuote,
-    authors,
-    categories,
-    searchTerm,
-    selectedCategory,
-    getRandomQuote,
-    searchQuotes,
-    filterByCategory
-  } = useQuotes();
+  const { user } = useAuth();
+  const [ quote, setQuote ] = useState<Quote | null>(null);
+  const [quoteTypes, setQuoteTypes]  = useState<string[]>([]);
+  const [selectedquoteType, setSelectedQuoteType] = useState<string>("");
+  const [ quoteState, setQuoteState ] = useState<QuoteState>({
+    totalTodaySaved: 0,
+    totalTodayViews: 0
+  });
+  const [ loading, setLoading ] = useState(false);
 
-  const handleLike = () => {
+  // get quote
+  useEffect(() => {
+    ;(async () => {
+      setLoading(true);
+      const { error, data } = await getQuoteOfToday(selectedquoteType);
+
+      if(!error){
+        setQuote(data);
+      }
+      setLoading(false);
+    })();
+
+  // get quote state
+    ;(async () => {
+      setLoading(true);
+      const { error, data } = await getQuoteState();
+
+      if(!error){
+          setQuoteState(data);        
+      }
+      setLoading(false);
+    })();
+
+      // get quote state
+      ;(async () => {
+        setLoading(true);
+        const { error, data } = await getAllQuoteTypes();
+  
+        if(!error){
+            setQuoteTypes(data);        
+        }
+        setLoading(false);
+      })();
+
+  }, [selectedquoteType]);
+
+  const handleSave = async () => {
+    if(!user){
+      return toast("Please login first to save.");
+    }
+
+    setLoading(true);
     // In a real app, you would update the likes in your database
-    console.log('Liked quote:', currentQuote?.id);
+    const { error, data } = await saveQuote();
+    if(!error){
+      setQuote(data);
+    }
+
+    setLoading(false)
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
       <Header />
-
       <main className="max-w-6xl mx-auto px-6 md:px-8 pb-20">
         {/* Hero Section */}
         <section className="text-center mb-16">
@@ -46,49 +94,36 @@ export default function Home() {
         </section>
 
         {/* Quote Display */}
-        {currentQuote && (
+
+        {
+          (!quote && loading) && (
+            <div className='flex items-center justify-center min-h-96'>
+              <Loader size={25} className='animate-spin'/>
+            </div>
+          )
+        }
+
+        {quote && (
           <section className="mb-16">
             <QuoteCard
-              quote={currentQuote}
-              onNewQuote={getRandomQuote}
-              onLike={handleLike}
+              loading={loading}
+              quote={quote}
+              onSave={handleSave}
             />
           </section>
         )}
 
-        {/* Featured Authors */}
-        <section className="mb-16">
-          <motion.h3
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent"
-          >
-            Featured Authors
-          </motion.h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {authors.slice(0, 4).map((author, index) => (
-              <AuthorCard
-                key={author.id}
-                author={author}
-                delay={index * 0.1}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Search Section */}
-        <SearchBar onSearch={searchQuotes} searchTerm={searchTerm} />
-
         {/* Category Selector */}
-        <CategorySelector
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onSelectCategory={filterByCategory}
+        <QuoteTypeSelector
+          quoteTypes={quoteTypes}
+          selectedType={selectedquoteType}
+          onSelectType={(type) => {
+            setSelectedQuoteType(type);
+          }}
         />
 
         {/* Stats Section */}
-        <StatsCard />
+        <StatsCard quoteState={quoteState} />
       </main>
 
       <Footer />

@@ -2,24 +2,31 @@
 
 import { motion } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
-import { AuthorSearchBar } from '@/components/AuthorSearchBar';
-import { Author } from '../types/quote';
+// import { AuthorSearchBar } from '@/components/AuthorSearchBar';
+// import { Author } from '../types/quote';
+import { useAuth } from '@/context/auth-context';
+import { useRouter } from 'next/navigation';
+import Dropdown from './ProfileDropdown';
+import ProfileDropdown from './ProfileDropdown';
 
 export const Header = () => {
+  const router = useRouter();
+  const { user, logout } = useAuth();
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const isLoggedIn = !!user;
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const handleAuthorSelect = (author: Author) => {
-    console.log('Selected author:', author.name);
-  };
+  // const handleAuthorSelect = (author: Author) => {
+  //   console.log('Selected author:', author.name);
+  // };
 
   const handleLogin = () => {
-    setIsLoggedIn(true);
+    router.push('/auth/login');
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    await logout();
   };
 
   useEffect(() => {
@@ -106,7 +113,7 @@ export const Header = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-50"
               >
-                {['Home', 'Authors', 'Favorites'].map((item) => (
+                {['Home'].map((item) => (
                   <a
                     key={item}
                     href="#"
@@ -118,13 +125,6 @@ export const Header = () => {
                 ))}
                 {isLoggedIn ? (
                   <>
-                    <a
-                      href="/profile"
-                      className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Profile
-                    </a>
                     <button
                       onClick={() => {
                         handleLogout();
@@ -142,11 +142,11 @@ export const Header = () => {
         </div>
 
         {/* SearchBar in center in mobile, inline in desktop */}
-        <div className="w-full md:w-auto flex justify-center md:justify-start">
-          <div className="w-full max-w-md md:max-w-none">
-            <AuthorSearchBar onAuthorSelect={handleAuthorSelect} />
-          </div>
-        </div>
+        {/* <div className="w-full md:w-auto flex justify-center md:justify-start"> */}
+          {/* <div className="w-full max-w-md md:max-w-none"> */}
+            {/* <AuthorSearchBar onAuthorSelect={handleAuthorSelect} /> */}
+          {/* </div> */}
+        {/* </div>*/}
 
         {/* Desktop menu and auth */}
         <motion.div
@@ -155,7 +155,7 @@ export const Header = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="hidden md:flex items-center space-x-6"
         >
-          {['Home', 'Authors', 'Favorites'].map((item) => (
+          {['Home'].map((item) => (
             <a
               key={item}
               href="#"
@@ -167,27 +167,28 @@ export const Header = () => {
           ))}
 
           {isLoggedIn ? (
-            <div className="relative group">
-              <img
-                src="https://i.pravatar.cc/150"
-                alt="User Avatar"
-                className="w-8 h-8 rounded-full cursor-pointer border-2 border-purple-400"
-              />
-              <div className="absolute right-0 mt-2 w-32 bg-white shadow-md rounded-md py-2 hidden group-hover:block z-20">
-                <a
-                  href="/profile"
-                  className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                >
-                  Profile
-                </a>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
+            <ProfileDropdown/>
+            // <div className="relative group">
+            //   <img
+            //     src="https://i.pravatar.cc/150"
+            //     alt="User Avatar"
+            //     className="w-8 h-8 rounded-full cursor-pointer border-2 border-purple-400"
+            //   />    
+            //   <div className="absolute right-0 mt-2 w-32 bg-white shadow-md rounded-md py-2 hidden group-hover:block z-20">
+            //     <a
+            //       href="/profile"
+            //       className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+            //     >
+            //       Profile
+            //     </a>
+            //     <button
+            //       onClick={handleLogout}
+            //       className="w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
+            //     >
+            //       Logout
+            //     </button>
+            //   </div>
+            // </div>
           ) : (
             <button
               onClick={handleLogin}
